@@ -1,0 +1,1 @@
+Put your delete confirmation here (cfg/delete.txt)

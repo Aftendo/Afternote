@@ -1,0 +1,1 @@
+Put your upload conditions here (cfg/upload.txt)
