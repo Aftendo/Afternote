@@ -49,6 +49,11 @@ If you havent installed dependencies, install them with `pip install django && p
 If the Django 404 page shows, that means you haven't modified `settings.py` for setting `DEBUG` to False.
 
 
+**NOTE**: If Debug is set to False, admin panel will most likely be bugged. Don't use the current Afternote source code for production.
+![image](https://github.com/ItsAymo/Afternote/assets/147617344/ecbacaaf-2371-4ed7-b870-fc3dff36de3c)
+
+
+
 If you followed correctly all those steps, you should now have a Afternote server.
 
 
