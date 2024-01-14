@@ -39,9 +39,10 @@ If you havent installed dependencies, install them with `pip install django && p
 ![image](https://github.com/ItsAymo/Afternote/assets/147617344/b8ba0b35-6adb-4e11-bf97-c0875776bba3)
 ![image](https://github.com/ItsAymo/Afternote/assets/147617344/bd2d8fa0-f65e-4bf1-81b1-5b5150076b14)
 ![image](https://github.com/ItsAymo/Afternote/assets/147617344/51ff12ee-3034-4e1b-a5fd-c9e935c1d35d)
-- Step 10: Runserver with `python3 manage.py runserver` (Local only)
+- Step 10: Make migrations with `python3 manage.py migrate`
+- Step 11: Runserver with `python3 manage.py runserver` (Local only)
 ![image](https://github.com/ItsAymo/Afternote/assets/147617344/de55a78e-58ef-4995-a741-8e9eafc59017)
-- Step 11: Check your browser with the URL: https://127.0.0.1:8000/
+- Step 12: Check your browser with the URL: https://127.0.0.1:8000/
 ![image](https://github.com/ItsAymo/Afternote/assets/147617344/ad30a689-441f-4cc6-819c-633695e972d5)
 
 
