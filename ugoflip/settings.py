@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'db.apps.DbConfig',
     'flip.apps.FlipConfig',
-    'django_extensions'
 ]
 
 MIDDLEWARE = [
@@ -71,6 +70,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ugoflip.wsgi.application'
+
+AUTH_USER_MODEL = "db.User"
 
 
 # Database

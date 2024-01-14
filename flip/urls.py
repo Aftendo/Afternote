@@ -12,6 +12,14 @@ urlpatterns = [
     path('flipnote/<str:file>.htm', views.flipnote_info, name="info"),
     path('eula_list.tsv', views.eula_list, name="propaganda"),
     path('index.ugo', views.index, name="index"),
-    path('hot.ugo', views.ugo_list, name="ugolist"),
-    path('post/flipnote.post', views.post_flip, name="post_real")
+    path('newest.ugo', views.newest_list, name="newest"),
+    path('channels.ugo', views.categories, name="categories"),
+    path('channels/search.ugo', views.others, name="others"),
+    path('channels/<str:internal_id>.ugo', views.channels, name="channels"),
+    path('channel/<str:internal_id>.ugo', views.channel, name="channel"),
+    path('channel/<str:internal_id>.post', views.post_flip, name="post_flip"),
+    path('signin.htm', views.signin, name="signin"),
+    path('signin/step1.kbd', views.signin_step1, name="step1"),
+    path('signin/step2.kbd', views.signin_step2, name="step2"),
+    path('error_get.htm', views.error_get, name="error_get"),
 ]

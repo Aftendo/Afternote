@@ -4,3 +4,7 @@ from .models import *
 
 
 admin.site.register(Flipnote)
+admin.site.register(User)
+admin.site.register(Session)
+admin.site.register(Category)
+admin.site.register(Channel)
