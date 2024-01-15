@@ -1,13 +1,115 @@
 <html>
     <head>
+        <title>ok</title>
         <meta name="upperlink" content="{{ ppmUri }}">
-		<meta name="savebutton" content="{{ ppmUri }}">
-		<meta name="playcontrolbutton" content="">
-        <meta name="autoplay" content="">
+        <meta name="starbutton" content="{{BASE_URI}}ds/v2-xx/flipnote/{{ flipnote.real_filename }}.star">
+        <meta name="starbutton1" content="{{BASE_URI}}ds/v2-xx/flipnote/{{ flipnote.real_filename }}.star?starcolor=green,{{ session.user.green_star }}">
+        <meta name="starbutton2" content="{{BASE_URI}}ds/v2-xx/flipnote/{{ flipnote.real_filename }}.star?starcolor=red,{{ session.user.red_star }}">
+        <meta name="starbutton3" content="{{BASE_URI}}ds/v2-xx/flipnote/{{ flipnote.real_filename }}.star?starcolor=blue,{{ session.user.blue_star }}">
+        <meta name="starbutton4" content="{{BASE_URI}}ds/v2-xx/flipnote/{{ flipnote.real_filename }}.star?starcolor=purple,{{ session.user.purple_star }}">
+        <meta name="savebutton" content="{{ ppmUri }}">
+        <meta name="playcontrolbutton" content="">
+        <link rel="stylesheet" href="{{BASE_URI}}ds/v2-eu/static/css/basic.css">
     </head>
     <body>
-        <h1>Views: {{flipnote.views}}</h1>
-        <h1>Downloads: {{flipnote.saved}}</h1>
-        <h1>Made by {{flipnote.made_by.username}}</h1>
+        <table width="240" border="0" cellspacing="0" cellpadding="0" class="tab">
+			<tr>
+				<td class="border" width="5" align="center">
+					<div class="border"></div>
+				</td>
+				<td class="border" width="70" align="center">
+					<div class="border"></div>
+				</td>
+				<td class="border" width="95" align="center">
+					<div class="border"></div>
+				</td>
+			</tr>
+			<tr>
+				<td class="space"> </td>
+				<td class="tabon" align="center">
+					<div class="on" align="center">Description</div>
+				</td>
+				<td class="taboff" align="center">
+					<a class="taboff" href="{{ BASE_URI }}ds/v2-eu/flipnote/comments/{{ flipnote.real_filename }}.htm">Comments(0)</a>
+				</td>
+			</tr>
+		</table>
+		<div class="pad5b"></div>
+		<table width="226" border="0" cellspacing="0" cellpadding="0" class="detail">
+            <tr>
+				<th width="90">
+					<div class="item-term" align="left">Creator</div>
+				</th>
+				<td width="136">
+					<div class="item-value" align="right">
+						{{ flipnote.made_by.username }}
+					</div>
+				</td>
+			</tr>
+            <tr> </tr>
+			<tr>
+			<td colspan="2">
+				<div class="hr"></div>
+			</td>
+			</tr>
+            <tr>
+				<th width="90">
+					<div class="item-term" align="left">Stars</div>
+				</th>
+				<td width="136">
+					<div class="item-value" align="right">
+						<a href="{{ BASE_URI }}ds/v2-eu/flipnote/stars/{{ flipnote.real_filename }}.htm"><span class="star0c">★</span> <span class="star0">{{ flipnote.star }}</span></a><br/><a href="{{ BASE_URI }}ds/v2-eu/flipnote/stars/{{ flipnote.real_filename }}.htm"><span class="star1c">★</span> <span class="star1">{{ flipnote.green_star }}</span></a><br/><a href="{{ BASE_URI }}ds/v2-eu/flipnote/stars/{{ flipnote.real_filename }}.htm"><span class="star2c">★</span> <span class="star2">{{ flipnote.red_star }}</span></a><br/><a href="{{ BASE_URI }}ds/v2-eu/flipnote/stars/{{ flipnote.real_filename }}.htm"><span class="star3c">★</span> <span class="star3">{{ flipnote.blue_star }}</span></a><br/><a href="{{ BASE_URI }}ds/v2-eu/flipnote/stars/{{ flipnote.real_filename }}.htm"><span class="star4c">★</span> <span class="star4">{{ flipnote.purple_star }}</span></a>
+					</div>
+				</td>
+			</tr>
+            <tr> </tr>
+			<tr>
+			<td colspan="2">
+				<div class="hr"></div>
+			</td>
+			</tr>
+            <tr>
+				<th width="90">
+					<div class="item-term" align="left">Views</div>
+				</th>
+				<td width="136">
+					<div class="item-value" align="right">
+						{{ flipnote.views }}
+					</div>
+				</td>
+			</tr>
+            <tr> </tr>
+			<tr>
+			<td colspan="2">
+				<div class="hr"></div>
+			</td>
+			</tr>
+            <tr>
+				<th width="90">
+					<div class="item-term" align="left">Downloads</div>
+				</th>
+				<td width="136">
+					<div class="item-value" align="right">
+						{{ flipnote.saved }}
+					</div>
+				</td>
+			</tr>
+            <tr> </tr>
+			<tr>
+			<td colspan="2">
+				<div class="hr"></div>
+			</td>
+			</tr>
+            <tr>
+				<th width="90">
+					<div class="item-term" align="left">Channel</div>
+				</th>
+				<td width="136">
+					<div class="item-value" align="right">
+						<a href="{{ BASE_URI }}ds/v2-eu/channel/{{ flipnote.channel.internal_id }}.uls">{{ flipnote.channel.name }}</a>
+					</div>
+				</td>
+			</tr>
+		</table>
     </body>
 </html>

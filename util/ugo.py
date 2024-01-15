@@ -56,12 +56,13 @@ class UgoMenu:
             }
         )
 
-    def add_item(self, args):
+    def add_item(self, args, should_replace_icon=True):
         if "item" not in self.menu:
             self.menu["item"] = []
         if "file" in args:
             self.add_file(args["file"])
-            args["icon"] = len(self.embeds) - 1
+            if should_replace_icon:
+                args["icon"] = str(len(self.embeds) - 1)
         self.menu["item"].append(
             {
                 "url": args.get("url", ""),
@@ -113,11 +114,11 @@ class UgoMenu:
             for item in self.menu["dropdown"]:
                 menu_data.append(
                     b"2\t"
-                    + item.get("url", b"")
+                    + item.get("url", b"").encode()
                     + b"\t"
-                    + self.write_label(item.get("label", ""))
+                    + self.write_label(item.get("label", "")).encode()
                     + b"\t"
-                    + item.get("selected", b"0")
+                    + item.get("selected", b"0").encode()
                 )
 
         # TYPE 3 -- BUTTONS

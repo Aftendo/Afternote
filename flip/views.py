@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from util.ugo import UgoMenu
 from util.ppm import PPMParser
-import os.path, io, random, string
+import os.path, io, random, string, datetime
 from django.contrib.auth import authenticate
 from db.models import *
 
@@ -67,11 +67,11 @@ def index(request, reg):
     ugo = UgoMenu()
     ugo.set_type("0")
     if session.user != None:
-        ugo.add_item({"label": "All Flipnotes", "url": request.build_absolute_uri('/')+"ds/v2-eu/newest.uls", "icon": "100"})
+        ugo.add_item({"label": "Browse Flipnotes", "url": request.build_absolute_uri('/')+"ds/v2-eu/hot.uls", "icon": "100"})
         ugo.add_item({"label": "Channels", "url": request.build_absolute_uri('/')+"ds/v2-eu/channels.uls", "icon": "101"})
     else:    
         ugo.add_item({"label": "Sign In", "url": request.build_absolute_uri('/')+"ds/v2-eu/signin.htm", "icon": "104"})
-    return HttpResponse(ugo.get_ugo(), content_type="text/plain; charset=utf-16le")
+    return HttpResponse(ugo.get_ugo())
 
 @csrf_exempt
 def categories(request, reg):
@@ -80,7 +80,7 @@ def categories(request, reg):
     ugo.set_type("0")
     for category in categories:
         ugo.add_item({"label": category.name, "url": request.build_absolute_uri('/')+"ds/v2-eu/channels/"+category.internal_id+".uls"})
-    return HttpResponse(ugo.get_ugo(), content_type="text/plain; charset=utf-16le")
+    return HttpResponse(ugo.get_ugo())
 
 @csrf_exempt
 def channels(request, reg, internal_id):
@@ -94,7 +94,7 @@ def channels(request, reg, internal_id):
     ugo.set_type("1")
     for channel in channels:
         ugo.add_item({"label": channel.name, "url": request.build_absolute_uri('/')+"ds/v2-eu/channel/"+channel.internal_id+".uls"})
-    return HttpResponse(ugo.get_ugo(), content_type="text/plain; charset=utf-16le")
+    return HttpResponse(ugo.get_ugo())
 
 @csrf_exempt
 def others(request, reg):
@@ -104,7 +104,7 @@ def others(request, reg):
     ugo.set_type("1")
     for category in categories:
         ugo.add_item({"label": category.name, "url": request.build_absolute_uri('/')+"ds/v2-eu/channels/"+category.internal_id+".uls"})
-    return HttpResponse(ugo.get_ugo(), content_type="text/plain; charset=utf-16le")
+    return HttpResponse(ugo.get_ugo())
 
 @csrf_exempt
 def channel(request, reg, internal_id):
@@ -123,7 +123,8 @@ def channel(request, reg, internal_id):
     ugo.set_meta("uppertitle", channel.name)
     ugo.set_meta("uppersubleft", "Flipnotes")
     ugo.set_meta("uppersubright", str(flip_count))
-    ugo.add_button({"label": "Post here", "url": request.build_absolute_uri('/')+"ds/v2-eu/channel/"+channel.internal_id+".post"})
+    if not channel.locked:
+        ugo.add_button({"label": "Post here", "url": request.build_absolute_uri('/')+"ds/v2-eu/channel/"+channel.internal_id+".post"})
     if page != 0:
         ugo.add_item({"label": "Previous", "url": request.build_absolute_uri('/')+"ds/v2-eu/channel/"+channel.internal_id+".uls?page="+str(page-1)})
     for flip in flips:
@@ -131,14 +132,201 @@ def channel(request, reg, internal_id):
             with open("./files/ppm/"+flip.real_filename+".ppm", "rb+") as file:
                 parser = PPMParser()
                 if parser.load(file):
-                    ugo.add_item({"url": request.build_absolute_uri('/')+"ds/v2-eu/flipnote/"+parser.current_filename+".ppm", "file": "./files/ppm/"+parser.current_filename+".ppm", "lock": str(flip.is_locked)})
+                    ugo.add_item({"url": request.build_absolute_uri('/')+"ds/v2-eu/flipnote/"+parser.current_filename+".ppm", "file": "./files/ppm/"+parser.current_filename+".ppm", "lock": str(flip.is_locked), "counter": str(flip.star+flip.green_star+flip.red_star+flip.blue_star+flip.purple_star), "icon": "3"}, False)
                 else:
                     continue
         else:
             continue
     if flip_count > (page+1)*50:
         ugo.add_item({"label": "Next", "url": request.build_absolute_uri('/')+"ds/v2-eu/channel/"+channel.internal_id+".uls?page="+str(page+1)})
-    return HttpResponse(ugo.get_ugo(), content_type="text/plain; charset=utf-16le")
+    return HttpResponse(ugo.get_ugo())
+
+@csrf_exempt
+def newest_list(request, reg):
+    return flip_list(request, True)
+
+@csrf_exempt
+def popular_list(request, reg):
+    return flip_list(request, None)
+
+@csrf_exempt
+def liked_list(request, reg):
+    return flip_list(request, False)
+
+"""
+type argument: None is Popular Flipnotes, False is Most Liked, and True is New Flipnotes
+"""
+@csrf_exempt
+def flip_list(request, type=None):
+    if not request.GET.get("page"):
+        page = 0
+    else:
+        page = int(request.GET.get("page"))
+    flip_count = Flipnote.objects.all().count()
+    ugo = UgoMenu()
+    ugo.set_type("2")
+    if type==None:
+        ugo.set_meta("uppertitle", "Popular Flipnotes")
+        ugo.set_meta("uppersubbottom", "The most popular recent flipnotes.")
+        flips = Flipnote.objects.all().order_by("-views")[page*50:50]
+        selected_newest = "0"
+        selected_popular = "1"
+        selected_liked = "0"
+    elif type==False:
+        ugo.set_meta("uppertitle", "Liked Flipnotes")
+        ugo.set_meta("uppersubbottom", "The most liked recent flipnotes.")
+        flips = Flipnote.objects.all().order_by("-total")[page*50:50]
+        selected_newest = "0"
+        selected_popular = "0"
+        selected_liked = "1"
+    elif type==True:
+        ugo.set_meta("uppertitle", "New Flipnotes")
+        ugo.set_meta("uppersubbottom", "The most recent flipnotes.")
+        flips = Flipnote.objects.all().order_by("-id")[page*50:50]
+        selected_newest = "1"
+        selected_popular = "0"
+        selected_liked = "0"
+    ugo.set_meta("uppersubleft", "Flipnotes")
+    ugo.set_meta("uppersubright", str(flip_count))
+    ugo.add_dropdown({"label": "New Flipnotes", "url": request.build_absolute_uri('/')+"ds/v2-eu/newest.uls", "selected": selected_newest})
+    ugo.add_dropdown({"label": "Most Popular", "url": request.build_absolute_uri('/')+"ds/v2-eu/hot.uls", "selected": selected_popular})
+    ugo.add_dropdown({"label": "Most Liked", "url": request.build_absolute_uri('/')+"ds/v2-eu/liked.uls", "selected": selected_liked})
+    if page != 0:
+        ugo.add_item({"label": "Previous", "url": request.build_absolute_uri('/')+"ds/v2-eu/hot.uls?page="+str(page-1)})
+    for flip in flips:
+        if not flip.channel.show_in_frontpage:
+            continue
+        if type==None or type==False:
+            now = datetime.date.today()
+            time_between = now - flip.date
+            if int(time_between.days) > 7:
+                continue
+        if os.path.exists("./files/ppm/"+flip.real_filename+".ppm"):
+            with open("./files/ppm/"+flip.real_filename+".ppm", "rb+") as file:
+                parser = PPMParser()
+                if parser.load(file):
+                    ugo.add_item({"url": request.build_absolute_uri('/')+"ds/v2-eu/flipnote/"+parser.current_filename+".ppm", "file": "./files/ppm/"+parser.current_filename+".ppm", "counter": str(flip.star+flip.green_star+flip.red_star+flip.blue_star+flip.purple_star), "icon": "3"}, False)
+                else:
+                    continue
+        else:
+            continue
+    if flip_count > (page+1)*50:
+        ugo.add_item({"label": "Next", "url": request.build_absolute_uri('/')+"ds/v2-eu/hot.uls?page="+str(page+1)})
+    return HttpResponse(ugo.get_ugo())
+
+@csrf_exempt
+def info(request, reg, file):
+    try:
+        session = Session.objects.get(token=request.headers['X-DSi-SID'])
+    except:
+        return HttpResponse(status=403)
+    try:
+        flip = Flipnote.objects.get(real_filename=file)
+    except ObjectDoesNotExist:
+        return HttpResponse(status=404)
+    if session.user != flip.made_by:
+        flip.views += 1
+        flip.save()
+    return HttpResponse("0\n0\n", content_type="text/plain; charset=utf-16le")
+
+@csrf_exempt
+def dl(request, reg, file):
+    try:
+        session = Session.objects.get(token=request.headers['X-DSi-SID'])
+    except:
+        return HttpResponse(status=403)
+    try:
+        flip = Flipnote.objects.get(real_filename=file)
+    except ObjectDoesNotExist:
+        return HttpResponse(status=404)
+    if session.user != flip.made_by:
+        flip.saved += 1
+        flip.save()
+    return HttpResponse("nice", content_type="text/plain; charset=utf-16le")
+
+@csrf_exempt
+def star(request, reg, file):
+    try:
+        session = Session.objects.get(token=request.headers['X-DSi-SID'])
+    except:
+        return HttpResponse(status=403)
+    try:
+        flip = Flipnote.objects.get(real_filename=file)
+    except ObjectDoesNotExist:
+        return HttpResponse(status=404)
+    if "X-Hatena-Star-Count" not in request.headers:
+        return HttpResponse(status=403)
+    star = int(request.headers["X-Hatena-Star-Count"])
+    if star < 1 or star > 65535:
+        return HttpResponse(status=403)
+    try:
+        star_log = StarLog.objects.get(user=session.user, flipnote=flip)
+    except ObjectDoesNotExist:
+        star_log = StarLog.objects.create(user=session.user, flipnote=flip)
+        star_log = StarLog.objects.get(user=session.user, flipnote=flip)
+    if request.GET.get("starcolor"):
+        user = User.objects.get(id=session.user.id)
+        star_type = request.GET.get("starcolor")
+        if star_type == "green":
+            if star > session.user.green_star:
+                return HttpResponse(status=403)
+            user.green_star -= star
+            star_log.green_star += star
+            flip.green_star += star
+        elif star_type == "red":
+            if star > session.user.red_star:
+                return HttpResponse(status=403)
+            user.red_star -= star
+            star_log.red_star += star
+            flip.red_star += star
+        elif star_type == "blue":
+            if star > session.user.blue_star:
+                return HttpResponse(status=403)
+            user.blue_star -= star
+            star_log.blue_star += star
+            flip.blue_star += star
+        elif star_type == "purple":
+            if star > session.user.purple_star:
+                return HttpResponse(status=403)
+            user.purple_star -= star
+            star_log.purple_star += star
+            flip.purple_star += star
+        else:
+            return HttpResponse(status=403)
+        flip.total += star
+        user.save()
+        star_log.save()
+        flip.save()
+        return HttpResponse("nice star you got here, can I have it?", content_type="text/plain; charset=utf-16le")
+    else:
+        if star_log.star >= 10:
+            return HttpResponse("nice", content_type="text/plain; charset=utf-16le")
+        else:
+            if star_log.star + star > 10:
+                flip.star += (10 - star_log.star)
+                flip.total += (10 - star_log.star)
+                flip.save()
+                star_log.star = 10
+                star_log.save()
+                return HttpResponse("hi potential reverse engineer", content_type="text/plain; charset=utf-16le")
+            star_log.star += star
+            star_log.save()
+            flip.star += star
+            flip.total += star
+            flip.save()
+    return HttpResponse("nice", content_type="text/plain; charset=utf-16le")
+
+@csrf_exempt
+def flipnote_info(request, reg, file):
+    try:
+        session = Session.objects.get(token=request.headers['X-DSi-SID'])
+    except:
+        return HttpResponse(status=403)
+    try:
+        flip = Flipnote.objects.get(real_filename=file)
+    except ObjectDoesNotExist:
+        return HttpResponse(status=404)
+    return render(request, "details.html", {"BASE_URI": request.build_absolute_uri('/'),"flipnote": flip, "ppmUri": request.build_absolute_uri('/')+"ds/v2-eu/flipnote/"+file+".ppm", "session": session}, content_type="text/html; charset=utf-8")
 
 @csrf_exempt
 def signin(request, reg):
@@ -214,73 +402,6 @@ def signin_step2(request, reg):
 @csrf_exempt
 def error_get(request, reg):
     return render(request, "error.html", {"errMsg": request.GET.get("error")})
-
-@csrf_exempt
-def newest_list(request, reg):
-    if not request.GET.get("page"):
-        page = 0
-    else:
-        page = int(request.GET.get("page"))
-    flip_count = Flipnote.objects.all().count()
-    flips = Flipnote.objects.all().order_by("-id")[page*50:50]
-    ugo = UgoMenu()
-    ugo.set_type("2")
-    ugo.set_meta("uppertitle", "All Flipnotes")
-    ugo.set_meta("uppersubleft", "Flipnotes")
-    ugo.set_meta("uppersubright", str(flip_count))
-    if page != 0:
-        ugo.add_item({"label": "Previous", "url": request.build_absolute_uri('/')+"ds/v2-eu/newest.uls?page="+str(page-1)})
-    for flip in flips:
-        if os.path.exists("./files/ppm/"+flip.real_filename+".ppm"):
-            with open("./files/ppm/"+flip.real_filename+".ppm", "rb+") as file:
-                parser = PPMParser()
-                if parser.load(file):
-                    ugo.add_item({"url": request.build_absolute_uri('/')+"ds/v2-eu/flipnote/"+parser.current_filename+".ppm", "file": "./files/ppm/"+parser.current_filename+".ppm", "lock": str(flip.is_locked)})
-                else:
-                    continue
-        else:
-            continue
-    if flip_count > (page+1)*50:
-        ugo.add_item({"label": "Next", "url": request.build_absolute_uri('/')+"ds/v2-eu/newest.uls?page="+str(page+1)})
-    return HttpResponse(ugo.get_ugo(), content_type="text/plain; charset=utf-16le")
-
-@csrf_exempt
-def info(request, reg, file):
-    try:
-        session = Session.objects.get(token=request.headers['X-DSi-SID'])
-    except:
-        return HttpResponse(status=403)
-    try:
-        flip = Flipnote.objects.get(real_filename=file)
-    except ObjectDoesNotExist:
-        return HttpResponse(status=404)
-    if session.user != flip.made_by:
-        flip.views += 1
-        flip.save()
-    return HttpResponse("0\n0\n", content_type="text/plain; charset=utf-16le")
-
-@csrf_exempt
-def dl(request, reg, file):
-    try:
-        session = Session.objects.get(token=request.headers['X-DSi-SID'])
-    except:
-        return HttpResponse(status=403)
-    try:
-        flip = Flipnote.objects.get(real_filename=file)
-    except ObjectDoesNotExist:
-        return HttpResponse(status=404)
-    if session.user != flip.made_by:
-        flip.saved += 1
-        flip.save()
-    return HttpResponse("nice", content_type="text/plain; charset=utf-16le")
-
-@csrf_exempt
-def flipnote_info(request, reg, file):
-    try:
-        flip = Flipnote.objects.get(real_filename=file)
-    except ObjectDoesNotExist:
-        return HttpResponse(status=404)
-    return render(request, "details.html", {"flipnote": flip, "ppmUri": request.build_absolute_uri('/')+"ds/v2-eu/flipnote/"+file+".ppm"}, content_type="text/html; charset=utf-8")
     
 @csrf_exempt
 def ppmloader(request, reg, file):
@@ -301,6 +422,8 @@ def post_flip(request, reg, internal_id):
     try:
         channel = Channel.objects.get(internal_id=internal_id)
     except:
+        return HttpResponse(status=403)
+    if channel.locked:
         return HttpResponse(status=403)
     if request.method == 'POST':
         if request.body != "":
@@ -324,3 +447,13 @@ def post_flip(request, reg, internal_id):
             return HttpResponse(status=400)
     else:
         return HttpResponse(status=405)
+    
+@csrf_exempt
+def static(request, reg, dir, file):
+    if os.path.exists("./ds-static/"+dir+"/"+file):
+        with open("./ds-static/"+dir+"/"+file, "rb+") as file:
+            return HttpResponse(file.read(), content_type="text/css; charset=utf-8")
+    else:
+        resp = HttpResponse()
+        resp.status_code = 404
+        return resp
